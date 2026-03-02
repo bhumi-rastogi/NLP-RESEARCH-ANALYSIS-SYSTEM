@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# config/config.yaml
+# Central configuration file for the NLP Research Analyzer (Milestone 1).
+# All tunable hyper-parameters live here — no magic numbers in source code.
+# ─────────────────────────────────────────────────────────────────────────────
+
+preprocessing:
+  min_word_len: 3           # Tokens shorter than this are discarded
+  min_paragraph_len: 50     # Paragraphs shorter than this (chars) are discarded
+
+tfidf:
+  max_df: 1.0               # Ignore terms in > max_df fraction of documents
+  min_df: 1                 # Ignore terms appearing in fewer than min_df documents
+  top_n_keywords: 10        # How many keywords to surface
+
+lda:
+  num_topics: 3             # Default number of latent topics
+  passes: 10                # Training passes over the corpus
+  random_state: 42          # Seed for reproducibility
+  sweep_range: [2, 7]       # [start, stop) range for coherence sweep
+
+summarization:
+  top_n: 5                  # Number of sentences in the extractive summary
+
+visualization:
+  wordcloud_width: 800
+  wordcloud_height: 400
