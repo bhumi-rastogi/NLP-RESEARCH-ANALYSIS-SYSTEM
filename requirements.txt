@@ -1,19 +1,13 @@
-# ─────────────────────────────────────────────────────────────
-# Core dependencies
-# ─────────────────────────────────────────────────────────────
-PyPDF2>=3.0.0
-nltk>=3.8
-scikit-learn>=1.3
-gensim>=4.3
-matplotlib>=3.7
-wordcloud>=1.9
-PyYAML>=6.0
-numpy>=1.24
-streamlit>=1.32
-
-
-# ─────────────────────────────────────────────────────────────
-# Dev / notebook dependencies (optional)
-# ─────────────────────────────────────────────────────────────
-# jupyter
-# ipykernel
+streamlit
+PyPDF2
+nltk
+scikit-learn
+gensim
+matplotlib
+wordcloud
+PyYAML
+numpy
+duckduckgo-search
+langchain
+langchain-core
+langgraph
