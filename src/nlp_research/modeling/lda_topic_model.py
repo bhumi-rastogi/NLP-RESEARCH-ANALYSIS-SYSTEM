@@ -30,6 +30,7 @@ def compute_coherence(lda_model, cleaned_docs, dictionary, coherence="c_v"):
         texts=cleaned_docs,
         dictionary=dictionary,
         coherence=coherence,
+        processes=1,  # Disable multiprocessing — avoids macOS spawn re-importing app.py
     )
     return cm.get_coherence()
 
@@ -38,7 +39,12 @@ def compute_coherence(lda_model, cleaned_docs, dictionary, coherence="c_v"):
 def sweep_num_topics(corpus, dictionary, cleaned_docs, topic_range=range(2, 7), passes=10):
     results = []
     for k in topic_range:
-        lda = LdaModel(corpus=corpus, id2word=dictionary, num_topics=k, passes=passes)
+        lda = LdaModel(
+            corpus=corpus,
+            id2word=dictionary,
+            num_topics=k,
+            passes=passes,
+        )
         score = compute_coherence(lda, cleaned_docs, dictionary)
         results.append((k, score))
     return results

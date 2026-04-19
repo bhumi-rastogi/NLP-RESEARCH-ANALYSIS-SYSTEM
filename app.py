@@ -91,7 +91,11 @@ with st.status("⏳ Processing documents…", expanded=True) as status:
 
     st.write("🧹 Preprocessing…")
     tokens = preprocess(raw_text, min_word_len=CFG["preprocessing"]["min_word_len"])
-    processed_text = " ".join(tokens)
+    # preprocess() returns a list of tokens
+    if not tokens:
+        st.error("Document is empty or contains only stop words after preprocessing. Please upload a valid document.")
+        st.stop()
+    processed_text = " ".join(tokens)  # string for TF-IDF and wordcloud
 
     st.write("📊 Computing TF-IDF…")
     tfidf_matrix, tfidf_vectorizer = build_tfidf_matrix(
@@ -103,22 +107,38 @@ with st.status("⏳ Processing documents…", expanded=True) as status:
 
     st.write("🧠 Training LDA model…")
     paragraphs = split_into_paragraphs(raw_text, min_length=CFG["preprocessing"]["min_paragraph_len"])
+    # If too few paragraphs, fall back to splitting the whole text into sentences
+    if len(paragraphs) < 3:
+        from nlp_research.preprocessing import split_into_sentences
+        paragraphs = split_into_sentences(raw_text)
+    # preprocess() returns a token list — gensim needs list-of-token-lists
     cleaned_docs = [preprocess(p) for p in paragraphs]
-    dictionary, corpus = build_corpus(cleaned_docs)
-    lda_model = train_lda(
-        corpus, dictionary,
-        num_topics=num_topics,
-        passes=CFG["lda"]["passes"],
-        random_state=CFG["lda"]["random_state"],
-    )
-    coherence = compute_coherence(lda_model, cleaned_docs, dictionary)
+    # Filter out empty token lists
+    cleaned_docs = [doc for doc in cleaned_docs if doc]
+    if not cleaned_docs:
+        st.warning("Not enough text to train LDA topics. Skipping topic modelling.")
+        lda_model = None
+        coherence = 0.0
+        sweep = [(k, 0.0) for k in range(*CFG["lda"]["sweep_range"])]
+    else:
+        dictionary, corpus = build_corpus(cleaned_docs)
+        # Cap num_topics to available unique tokens
+        actual_topics = min(num_topics, len(dictionary))
+        lda_model = train_lda(
+            corpus, dictionary,
+            num_topics=actual_topics,
+            passes=CFG["lda"]["passes"],
+            random_state=CFG["lda"]["random_state"],
+        )
+        coherence = compute_coherence(lda_model, cleaned_docs, dictionary)
 
-    st.write("📈 Computing coherence sweep…")
-    sweep = sweep_num_topics(
-        corpus, dictionary, cleaned_docs,
-        topic_range=range(*CFG["lda"]["sweep_range"]),
-        passes=CFG["lda"]["passes"],
-    )
+    if cleaned_docs:
+        st.write("📈 Computing coherence sweep…")
+        sweep = sweep_num_topics(
+            corpus, dictionary, cleaned_docs,
+            topic_range=range(*CFG["lda"]["sweep_range"]),
+            passes=CFG["lda"]["passes"],
+        )
 
     st.write("📝 Generating summary…")
     summary = summarize(raw_text, top_n=top_n_summary)
@@ -151,31 +171,37 @@ with tab1:
 
 #  Tab 2: LDA Topics 
 with tab2:
-    st.subheader(f"LDA Topics  —  Coherence Score: `{coherence:.4f}`")
-    cols = st.columns(min(num_topics, 3))
-    for i, topic in lda_model.show_topics(num_words=8, formatted=False):
-        t_words = [w for w, _ in topic]
-        t_probs = [p for _, p in topic]
-        fig, ax = plt.subplots(figsize=(5, 3))
-        ax.bar(t_words, t_probs, color="darkorange")
-        ax.set_title(f"Topic {i}")
-        ax.set_xticklabels(t_words, rotation=40, ha="right", fontsize=8)
-        ax.set_ylabel("Probability")
-        cols[i % len(cols)].pyplot(fig)
-        plt.close(fig)
+    if lda_model is None:
+        st.warning("Not enough text to train LDA topics. Upload a longer document.")
+    else:
+        st.subheader(f"LDA Topics  —  Coherence Score: `{coherence:.4f}`")
+        cols = st.columns(min(num_topics, 3))
+        for i, topic in lda_model.show_topics(num_words=8, formatted=False):
+            t_words = [w for w, _ in topic]
+            t_probs = [p for _, p in topic]
+            fig, ax = plt.subplots(figsize=(5, 3))
+            ax.bar(t_words, t_probs, color="darkorange")
+            ax.set_title(f"Topic {i}")
+            ax.set_xticklabels(t_words, rotation=40, ha="right", fontsize=8)
+            ax.set_ylabel("Probability")
+            cols[i % len(cols)].pyplot(fig)
+            plt.close(fig)
 
 #  Tab 3: Coherence Curve 
 with tab3:
     st.subheader("Coherence vs Number of Topics")
-    nums, coh_scores = zip(*sweep)
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(list(nums), list(coh_scores), marker="o", color="mediumseagreen", linewidth=2)
-    ax.set_xlabel("Number of Topics")
-    ax.set_ylabel("Coherence Score (c_v)")
-    ax.set_title("Coherence Curve")
-    ax.grid(True, alpha=0.3)
-    st.pyplot(fig)
-    plt.close(fig)
+    if not sweep or all(s == 0.0 for _, s in sweep):
+        st.warning("Coherence sweep unavailable — not enough text for topic modelling.")
+    else:
+        nums, coh_scores = zip(*sweep)
+        fig, ax = plt.subplots(figsize=(7, 4))
+        ax.plot(list(nums), list(coh_scores), marker="o", color="mediumseagreen", linewidth=2)
+        ax.set_xlabel("Number of Topics")
+        ax.set_ylabel("Coherence Score (c_v)")
+        ax.set_title("Coherence Curve")
+        ax.grid(True, alpha=0.3)
+        st.pyplot(fig)
+        plt.close(fig)
 
 #  Tab 4: Word Cloud 
 with tab4:

@@ -15,6 +15,8 @@ _lemmatizer = WordNetLemmatizer()
 
 # Cleans and lemmatizes raw text, returns a list of tokens.
 def preprocess(text, min_word_len=3):
+    if not text or not isinstance(text, str):
+        return []
     text = text.lower()
     text = re.sub(r"\s+", " ", text)
     tokens = word_tokenize(text)
@@ -23,17 +25,21 @@ def preprocess(text, min_word_len=3):
         for word in tokens
         if word.isalpha()
         and word not in _stop_words
-        and len(word) > min_word_len
+        and len(word) >= min_word_len
     ]
     return cleaned
 
 
 # Splits raw text into individual sentences using NLTK sent_tokenize.
 def split_into_sentences(text):
+    if not text:
+        return []
     return sent_tokenize(text)
 
 
 # Splits text on newlines and discards paragraphs shorter than min_length chars.
 def split_into_paragraphs(text, min_length=50):
+    if not text:
+        return []
     paragraphs = text.split("\n")
-    return [p for p in paragraphs if len(p.strip()) > min_length]
+    return [p.strip() for p in paragraphs if len(p.strip()) > min_length]
