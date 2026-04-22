@@ -1,0 +1,82 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{enumitem}
+
+\geometry{
+    left=25mm,
+    right=25mm,
+    top=25mm,
+    bottom=25mm
+}
+
+\title{\textbf{NLP Research Analyzer: Progress Report}}
+\author{Milestone 1 and Beyond}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This report provides a comprehensive overview of the NLP Research Analyzer project. It outlines the foundational architecture and components developed during Milestone 1, which primarily focused on building a robust Natural Language Processing (NLP) pipeline for document analysis. Furthermore, it details the advanced, agentic enhancements introduced post-Milestone 1, transitioning the system from a static pipeline to a dynamic, graph-based workflow.
+\end{abstract}
+
+\section{Introduction}
+The NLP Research Analyzer is designed to assist researchers in digesting and analyzing large volumes of text. By automating processes such as keyword extraction, topic discovery, and summarization, the system significantly reduces the manual effort required in literature review and information extraction.
+
+\section{Milestone 1: The Core NLP Pipeline}
+Milestone 1 established the foundational elements of the project. A complete, end-to-end NLP pipeline was developed and exposed via a user-friendly Streamlit web interface. The core components of this milestone include:
+
+\subsection{Document Ingestion}
+The system supports the ingestion of both plain text (\texttt{.txt}) and Portable Document Format (\texttt{.pdf}) files. Utilizing libraries like \texttt{PyPDF2}, the ingestion module accurately extracts raw text from uploaded documents, handling multiple files simultaneously.
+
+\subsection{Text Preprocessing}
+Robust text preprocessing is implemented using the Natural Language Toolkit (NLTK). The preprocessing pipeline performs the following operations:
+\begin{itemize}
+    \item \textbf{Lowercasing and Whitespace Normalization:} Ensures uniform text formatting.
+    \item \textbf{Tokenization:} Splits text into individual words and sentences using NLTK's \texttt{punkt} tokenizer.
+    \item \textbf{Stop Word Removal:} Filters out common, uninformative words (e.g., "the", "and") using NLTK's stop word corpus.
+    \item \textbf{Lemmatization:} Reduces words to their base or dictionary form (e.g., "running" to "run") using the \texttt{WordNetLemmatizer}.
+\end{itemize}
+
+\subsection{Feature Extraction (TF-IDF)}
+Term Frequency-Inverse Document Frequency (TF-IDF) is utilized to identify the most significant keywords within the documents. This statistical measure evaluates how relevant a word is to a document in a collection, effectively highlighting domain-specific terminology.
+
+\subsection{Topic Modeling (LDA)}
+Latent Dirichlet Allocation (LDA) via the \texttt{Gensim} library is employed to discover hidden thematic structures within the text. 
+\begin{itemize}
+    \item The system builds a dictionary and a bag-of-words corpus from the preprocessed paragraphs.
+    \item An LDA model is trained to extract a user-specified number of topics.
+    \item Model quality is evaluated using the \texttt{c\_v} coherence score. A coherence sweep feature allows users to determine the optimal number of topics by plotting coherence scores across a range of topic counts.
+\end{itemize}
+
+\subsection{Extractive Summarization}
+A TextRank-inspired approach is used for extractive summarization. Instead of simply summing TF-IDF weights, the system builds a sentence similarity matrix using cosine similarity. Sentences are scored based on their centrality to the document's overall meaning (i.e., how similar they are to all other sentences). The system also includes noise-filtering mechanisms to discard overly short, long, or non-alphabetic sentences.
+
+\subsection{Streamlit User Interface}
+All functionalities are integrated into a Streamlit dashboard, providing interactive controls for hyperparameter tuning (e.g., number of topics, summary length) and rich visualizations, including keyword bar charts, topic probability distributions, coherence curves, and word clouds.
+
+\section{Post-Milestone 1: Agentic Workflow Integration}
+Following the successful implementation of the static pipeline in Milestone 1, the project evolved to incorporate an advanced, autonomous agentic workflow using LangGraph. This transition enables more complex, multi-step reasoning and dynamic task execution.
+
+\subsection{LangGraph Architecture}
+The system now utilizes a StateGraph architecture (\texttt{src/graph/workflow.py}) to orchestrate the flow of information between different specialized agents. This graph-based approach allows for conditional routing, state management, and iterative refinement of outputs.
+
+\subsection{Specialized Agents}
+The monolithic pipeline is being augmented (and eventually replaced) by a modular system of specialized agents, located in the \texttt{src/agents/} directory:
+\begin{itemize}
+    \item \textbf{Search Agent (\texttt{search\_agent.py}):} Responsible for querying external sources or internal knowledge bases to retrieve relevant information based on user queries.
+    \item \textbf{Summarizer Agent (\texttt{summarizer\_agent.py}):} An AI-driven agent dedicated to synthesizing information and producing coherent, abstractive summaries, extending beyond the extractive methods of Milestone 1.
+    \item \textbf{Report Agent (\texttt{report\_agent.py}):} Tasked with compiling findings, structuring data, and generating comprehensive, readable reports.
+    \item \textbf{Validator Agent (\texttt{validator\_agent.py}):} Acts as a quality control mechanism, reviewing the outputs of other agents to ensure accuracy, relevance, and adherence to specified constraints.
+\end{itemize}
+
+\section{Conclusion}
+The NLP Research Analyzer has matured from a robust, standalone text processing application (Milestone 1) into a sophisticated, multi-agent system powered by LangGraph. This architectural shift significantly enhances the system's capabilities, allowing it to handle more nuanced research tasks autonomously and interactively.
+
+\end{document}
