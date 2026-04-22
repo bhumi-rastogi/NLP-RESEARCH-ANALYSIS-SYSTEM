@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+env/
+.venv/
+ENV/
+
+# Environment variables / secrets
+.env
+.env.*
+*.env
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Data files (uploaded/generated)
+data/*.csv
+data/*.pdf
+data/*.txt
+data/*.json
+# Keep the data directory itself
+!data/.gitkeep
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+*.ipynb
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Spacy models (downloaded at runtime)
+*.whl
