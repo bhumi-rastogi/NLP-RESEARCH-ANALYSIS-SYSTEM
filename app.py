@@ -1,5 +1,16 @@
+import os
 import streamlit as st
 import pandas as pd
+
+# ── Inject API key into environment BEFORE any agent imports ───────────────────
+# This ensures nodes.py can find GROQ_API_KEY via os.getenv() regardless of
+# when/how st.secrets is resolved during module initialisation.
+try:
+    _groq_key = st.secrets.get("GROQ_API_KEY", "")
+    if _groq_key:
+        os.environ["GROQ_API_KEY"] = _groq_key
+except Exception:
+    pass  # key may already be set as a real env variable
 
 # ── M1 imports ─────────────────────────────────────────────────────────────────
 from src.preprocessing import preprocess_text, get_text_stats
@@ -15,6 +26,7 @@ from src.visualizations import generate_wordcloud, plot_top_keywords, plot_topic
 from src.agent.graph import run_research_agent, stream_research_agent
 from src.agent.report_generator import format_report
 from src.pdf_export import generate_pdf_report
+
 
 # ── Page Config ────────────────────────────────────────────────────────────────
 st.set_page_config(

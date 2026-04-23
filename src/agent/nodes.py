@@ -10,15 +10,23 @@ from langchain_groq import ChatGroq
 def _load_groq_client() -> ChatGroq:
     """
     Instantiate a Groq ChatGroq client.
-    Reads the API key from Streamlit secrets first; falls back to the
-    GROQ_API_KEY environment variable if secrets are unavailable.
+    Key resolution order:
+      1. Streamlit secrets  → st.secrets["GROQ_API_KEY"]
+      2. Environment variable → GROQ_API_KEY
+    The actual key lives in .streamlit/secrets.toml (gitignored).
     """
+    key = ""
+    # 1 — try Streamlit secrets (works when app is running via streamlit)
     try:
         import streamlit as st
-        key = st.secrets["GROQ_API_KEY"]
+        key = st.secrets.get("GROQ_API_KEY", "") or ""
     except Exception:
+        pass
+    # 2 — fall back to env variable (works in CI / shell exports)
+    if not key:
         key = os.getenv("GROQ_API_KEY", "")
     return ChatGroq(model="llama-3.3-70b-versatile", api_key=key, temperature=0.3)
+
 
 
 # ── Node 1: Web search ────────────────────────────────────────────────────────
