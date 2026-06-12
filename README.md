@@ -18,7 +18,7 @@ ResearchScope is a dual-mode intelligent research analysis system built for the 
 
 | Field | Details |
 |---|---|
-| **Team Members** | Kushal Sarkar, Chinmay Soni, Lakshya Bapna |
+| **Team Members** | Bhumi Rastogi , Gouri Mishra , Aaditya Yadav |
 | **API Budget** | Free Tier Only (Groq, DuckDuckGo, Streamlit Cloud) |
 | **LLM** | Groq — `llama-3.3-70b-versatile` (free tier) |
 | **Hosting** | Streamlit Cloud |
