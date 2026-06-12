@@ -1,0 +1,357 @@
+\documentclass[12pt, a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{array}
+
+% ── Page Layout ────────────────────────────────────────────────────────
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue}
+
+% ── Header / Footer ───────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{GEN AI -- Section A -- Mid-Semester Report}
+\lhead{ResearchScope}
+\rfoot{Page \thepage}
+
+% ── Code Listing Style ────────────────────────────────────────────────
+\lstset{
+  backgroundcolor=\color{gray!10},
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  captionpos=b,
+  frame=single,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{red!70!black},
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  showspaces=false,
+  showstringspaces=false,
+  tabsize=4
+}
+
+% ══════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Title Page ────────────────────────────────────────────────────────
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+
+  {\LARGE \textbf{Intelligent Research Topic Analysis \& Agentic AI Research Assistant}}\\[0.5cm]
+  {\large \textit{Milestone 1: Traditional NLP Research Analysis System}}\\[0.3cm]
+  {\large \textbf{Mid-Semester Project Report}}\\[2cm]
+
+  {\large
+    \textbf{Team Members:}\\[0.3cm]
+    Kushal Sarkar\\
+    Chinmay Soni\\
+    Lakshya Bapna\\[1.5cm]
+  }
+
+  {\large
+    \textbf{Course:} Generative AI (Section A)\\[0.2cm]
+    \textbf{Submission:} Mid-Semester Evaluation\\[0.2cm]
+    \textbf{Date:} March 2026\\[2cm]
+  }
+
+  \rule{\linewidth}{0.5pt}\\[0.5cm]
+  {\large \textit{Application:} \href{https://github.com/Kushal425/GENai_SecA_P1}{\texttt{github.com/Kushal425/GENai\_SecA\_P1}}}\\[0.3cm]
+  \rule{\linewidth}{0.5pt}
+
+  \vfill
+\end{titlepage}
+
+% ── Table of Contents ─────────────────────────────────────────────────
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════════════
+\section{Abstract}
+
+This report presents the design and implementation of \textbf{ResearchScope}, an intelligent research document analysis system developed as part of the Generative AI course (Milestone 1). The system employs a classical, statistics-based Natural Language Processing (NLP) pipeline to process research documents and produce structured analytical summaries — strictly without the use of any Large Language Models (LLMs) or agentic AI frameworks. The pipeline accepts raw text or uploaded documents (PDF/TXT), performs text preprocessing, applies TF-IDF based keyword extraction, discovers latent topics using Latent Dirichlet Allocation (LDA), and generates extractive summaries using sentence-level TF-IDF scoring. Results are presented through an interactive Streamlit web interface with multiple visualizations. This report documents the problem formulation, technical architecture, implementation details, evaluation results, and known limitations of the current approach.
+
+% ══════════════════════════════════════════════════════════════════════
+\section{Introduction}
+
+\subsection{Problem Statement}
+The exponential growth of academic literature makes it increasingly difficult for researchers to efficiently identify key themes, extract important terminology, and understand document collections without spending hours reading. A research analysis system that can automatically surface key vocabulary, cluster related concepts, and generate concise summaries would drastically reduce this cognitive overhead.
+
+\subsection{Objectives}
+The objectives of Milestone 1 are to:
+\begin{enumerate}
+  \item Build a functional NLP pipeline that accepts research text or document uploads.
+  \item Identify key vocabulary using statistical feature extraction (TF-IDF).
+  \item Discover latent topics using probabilistic topic modeling (LDA).
+  \item Generate extractive summaries using sentence-level scoring.
+  \item Present all outputs through a clean, interactive web interface.
+  \item Strictly adhere to classical ML/NLP methods -- no LLMs are used.
+\end{enumerate}
+
+\subsection{Scope of Milestone 1}
+Milestone 1 focuses exclusively on a \textbf{Traditional NLP pipeline}. The system operates purely on statistical patterns and classical machine learning. Semantic understanding, reasoning, and agentic workflows are reserved for Milestone 2.
+
+% ══════════════════════════════════════════════════════════════════════
+\section{System Architecture}
+
+The system follows a sequential data processing pipeline, illustrated below. Each stage is encapsulated in a dedicated Python module for maintainability and testability.
+
+\begin{figure}[H]
+\centering
+\begin{lstlisting}[language={}]
+  Input (Text / PDF / TXT)
+        |
+        v
+  Text Preprocessing          [src/preprocessing.py]
+    - Tokenization
+    - Stopword Removal
+    - Lemmatization (spaCy)
+        |
+        v
+  Feature Extraction          [src/feature_extraction.py]
+    - TF-IDF Vectorization (scikit-learn)
+        |
+        +-------------------+
+        |                   |
+        v                   v
+  Keyword Extraction    Topic Modeling         [src/topic_model.py]
+  [src/keyword_         - LDA (gensim)
+   extractor.py]        - Coherence Eval       [src/evaluation.py]
+        |
+        v
+  Extractive Summarization    [src/summarizer.py]
+    - Sentence Scoring & Ranking (TF-IDF)
+        |
+        v
+  UI & Visualizations         [app.py, src/visualizations.py]
+    - Streamlit Dashboard
+    - Word Cloud, Bar Charts
+\end{lstlisting}
+\caption{ResearchScope System Architecture -- Milestone 1 NLP Pipeline}
+\end{figure}
+
+\subsection{Input Specification}
+\begin{itemize}
+  \item \textbf{Raw Text:} User can paste any research text directly into the Streamlit text area.
+  \item \textbf{Document Upload:} One or more \texttt{.pdf} or \texttt{.txt} files can be uploaded; they are parsed and concatenated into a single corpus.
+\end{itemize}
+
+\subsection{Output Specification}
+\begin{table}[H]
+\centering
+\caption{System Outputs -- Milestone 1}
+\begin{tabular}{@{}lp{9cm}@{}}
+\toprule
+\textbf{Output} & \textbf{Description} \\
+\midrule
+Keywords         & Top-$N$ terms ranked by TF-IDF score \\
+Topic Clusters   & $N$ LDA-discovered latent themes with top words and probability weights \\
+Coherence Score  & $C_v$ metric quantifying topic model quality \\
+Extractive Summary & Top-$N$ high-scoring sentences in original document order \\
+Visualizations   & Word cloud, keyword bar chart, LDA topic word distribution chart \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════════════
+\section{Technical Implementation}
+
+\subsection{Text Preprocessing}
+\textbf{Module:} \texttt{src/preprocessing.py} \quad \textbf{Libraries:} \texttt{nltk}, \texttt{spacy}
+
+The preprocessing stage transforms raw input into a clean, normalized token sequence through the following steps:
+
+\begin{enumerate}
+  \item \textbf{Lowercasing:} All characters are converted to lowercase to unify case variants.
+  \item \textbf{Punctuation Removal:} Non-alphanumeric characters are removed using regular expressions.
+  \item \textbf{Tokenization:} The text is segmented into individual word tokens using \texttt{nltk.word\_tokenize()}.
+  \item \textbf{Stopword Removal:} Common, semantically uninformative words (e.g., ``the'', ``and'', ``is'') are filtered using NLTK's English stopword corpus. Non-alphabetic tokens are also discarded.
+  \item \textbf{Lemmatization:} Tokens are reduced to their canonical dictionary form using spaCy's \texttt{en\_core\_web\_sm} model (e.g., ``running'' $\to$ ``run'', ``algorithms'' $\to$ ``algorithm''). This reduces vocabulary dimensionality and improves model quality.
+\end{enumerate}
+
+A secondary utility function \texttt{get\_text\_stats()} computes surface-level statistics (sentence count, word count, unique token count) from the raw text for display in the application's metrics row.
+
+\subsection{Feature Extraction (TF-IDF)}
+\textbf{Module:} \texttt{src/feature\_extraction.py} \quad \textbf{Library:} \texttt{scikit-learn}
+
+Term Frequency-Inverse Document Frequency (TF-IDF) is used to convert the preprocessed text corpus into a numerical feature matrix. For a term $t$ in document $d$ within corpus $D$:
+
+\begin{equation}
+  \text{TF-IDF}(t, d, D) = \underbrace{\frac{f_{t,d}}{\sum_{t' \in d} f_{t',d}}}_{\text{Term Frequency}} \times \underbrace{\log\left(\frac{|D|}{|\{d \in D : t \in d\}|}\right)}_{\text{Inverse Document Frequency}}
+\end{equation}
+
+Terms that are frequent within the document but rare across the corpus receive high weights, making them effective discriminative keywords. The implementation uses \texttt{TfidfVectorizer(max\_df=1.0, min\_df=1)} from scikit-learn to support single-document analysis.
+
+\subsection{Keyword Extraction}
+\textbf{Module:} \texttt{src/keyword\_extractor.py} \quad \textbf{Library:} \texttt{numpy}
+
+Keywords are extracted by summing TF-IDF scores across all rows of the feature matrix for each vocabulary term, and selecting the top-$N$ terms by aggregated score. This produces a ranked list of the most discriminative vocabulary items in the corpus.
+
+\subsection{Topic Modeling (LDA)}
+\textbf{Module:} \texttt{src/topic\_model.py} \quad \textbf{Library:} \texttt{gensim}
+
+Latent Dirichlet Allocation (LDA) is a generative probabilistic model that discovers abstract ``topics'' from a document corpus. It assumes that each document is a mixture of topics, and each topic is a distribution over words.
+
+The implementation:
+\begin{enumerate}
+  \item Tokenizes the preprocessed corpus into word lists.
+  \item Constructs a vocabulary dictionary (\texttt{corpora.Dictionary}).
+  \item Converts documents to Bag-of-Words (BoW) vectors.
+  \item Fits an \texttt{LdaModel} with user-configurable number of topics (2--10, default: 5) over 10 training passes.
+\end{enumerate}
+
+\subsubsection{Topic Coherence Evaluation}
+\textbf{Module:} \texttt{src/evaluation.py}
+
+Model quality is evaluated using the $C_v$ coherence score (Röder et al., 2015), implemented via \texttt{gensim.models.CoherenceModel}. This metric measures the semantic similarity of high-scoring words within each topic using a sliding window over aggregated co-occurrence counts. Scores range from 0 to 1, with higher values indicating more interpretable, human-understandable topics.
+
+\subsection{Extractive Summarization}
+\textbf{Module:} \texttt{src/summarizer.py} \quad \textbf{Libraries:} \texttt{nltk}, \texttt{scikit-learn}
+
+The summarization approach is purely \textbf{extractive} -- no text is generated; instead, the most informative existing sentences are selected:
+
+\begin{enumerate}
+  \item The raw text is segmented into individual sentences using \texttt{nltk.sent\_tokenize()}.
+  \item Each sentence is vectorized independently using \texttt{TfidfVectorizer}.
+  \item Sentences are scored by summing their TF-IDF term weights.
+  \item The top-$N$ highest-scoring sentences are selected (user-configurable, default: 5).
+  \item Selected sentences are re-ordered to their \textbf{original document position} before output, preserving narrative coherence.
+  \item Edge cases (single-sentence input, very short texts) are handled with appropriate fallbacks.
+\end{enumerate}
+
+\subsection{Document Loading}
+\textbf{Module:} \texttt{src/document\_loader.py} \quad \textbf{Library:} \texttt{PyPDF2}
+
+The system supports multi-format document intake:
+\begin{itemize}
+  \item \textbf{PDF files:} Text is extracted page-by-page using \texttt{PyPDF2.PdfReader}.
+  \item \textbf{TXT files:} Content is decoded using UTF-8 encoding with error tolerance.
+  \item Multiple uploaded files are concatenated into a unified corpus for joint analysis.
+\end{itemize}
+
+\subsection{User Interface \& Visualizations}
+\textbf{Module:} \texttt{app.py}, \texttt{src/visualizations.py} \quad \textbf{Libraries:} \texttt{streamlit}, \texttt{matplotlib}, \texttt{wordcloud}, \texttt{pandas}
+
+The Streamlit interface provides:
+\begin{itemize}
+  \item \textbf{Sidebar Controls:} Input mode toggle (paste text or upload), LDA topic count slider (2--10), keyword count slider (5--30), summary sentence count slider (2--10).
+  \item \textbf{Metrics Row:} Live statistics (document count, word count, sentence count, unique vocabulary).
+  \item \textbf{Four Result Tabs:} Keywords (TF-IDF table + badge display), Topics (LDA expanders with coherence score), Summary (extractive output with sentence scores), Visualizations (word cloud, keyword bar chart, topic distribution chart).
+\end{itemize}
+
+All plots use a dark-mode color scheme (\texttt{plasma} colormap) consistent with the Streamlit dark theme.
+
+% ══════════════════════════════════════════════════════════════════════
+\section{Results \& Evaluation}
+
+\subsection{Sample Output}
+The system was tested with a sample research text on Natural Language Processing. The pipeline successfully:
+\begin{itemize}
+  \item Extracted keywords including ``document'', ``language'', ``computer'', ``collection'', and ``frequency'' with non-zero TF-IDF scores.
+  \item Identified 5 distinct LDA topics with a coherence score of $C_v = 1.0$ (indicative of small, focused single-document input).
+  \item Generated a 3-sentence extractive summary preserving the original document order.
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+\begin{table}[H]
+\centering
+\caption{Evaluation Results on Sample Input}
+\begin{tabular}{@{}llc@{}}
+\toprule
+\textbf{Metric} & \textbf{Method} & \textbf{Result} \\
+\midrule
+Keyword Relevance    & TF-IDF Score Ranking     & Top 15 terms extracted \\
+Topic Quality        & LDA Coherence ($C_v$)    & 1.0 (single-document) \\
+Summary Coverage     & Sentence TF-IDF Scoring  & 3--5 sentences selected \\
+Pipeline Stability   & End-to-end unit test     & Passed (no errors) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════════════
+\section{Limitations}
+
+The following limitations of the traditional NLP approach are inherent to the classical methods used and directly motivate the transition to an Agentic AI system in Milestone 2:
+
+\begin{enumerate}
+  \item \textbf{Lack of Semantic Understanding:} TF-IDF and LDA rely purely on word frequency and co-occurrence statistics. They cannot understand meaning, context, or synonyms. For example, ``automobile'' and ``car'' are treated as completely distinct terms despite identical meaning.
+
+  \item \textbf{Rigid Extractive Summaries:} The summarizer selects verbatim sentences from the source document. If a selected sentence relies on surrounding context (e.g., ``He conducted the experiment...''), the output may be difficult to follow without the surrounding text.
+
+  \item \textbf{Fixed Topic Constraints:} LDA requires the user to pre-specify the number of topics. An incorrect choice either merges unrelated concepts into single topics or unnecessarily splits coherent themes, degrading interpretability.
+
+  \item \textbf{Static, Single-Pass Processing:} The system processes only the input provided at runtime. It cannot reason across multiple independent research papers, retrieve additional context, or iteratively refine its understanding over time.
+
+  \item \textbf{Language \& Domain Specificity:} The pipeline relies on English-specific stopword lists and spaCy's English language model. Performance will degrade significantly on non-English text or highly domain-specific scientific jargon not represented in the model's vocabulary.
+\end{enumerate}
+
+% ══════════════════════════════════════════════════════════════════════
+\section{GitHub Repository \& Code Quality}
+
+\begin{itemize}
+  \item \textbf{Repository:} \href{https://github.com/Kushal425/GENai_SecA_P1}{\texttt{https://github.com/Kushal425/GENai\_SecA\_P1}}
+  \item \textbf{Branch:} \texttt{Kushal}
+  \item \textbf{Structure:} The project follows a modular design with all NLP components separated into individual files under \texttt{src/}, minimizing coupling and maximizing reusability.
+  \item \textbf{Code Quality:} Functions are named descriptively, each module has a single responsibility, and all edge cases (short texts, single sentences, empty uploads) are handled gracefully.
+  \item \textbf{Documentation:} A comprehensive \texttt{README.md} with 6-step installation and local hosting instructions, technology stack, milestone roadmap, architecture overview, and limitations section.
+  \item \textbf{Dependencies:} All required packages are listed in \texttt{requirements.txt}. A \texttt{setup.sh} script automates the entire environment setup process.
+\end{itemize}
+
+\subsection{Project Structure}
+\begin{lstlisting}[language={}]
+ResearchScope/
+|
+|-- data/                         # Input documents and datasets
+|-- src/
+|   |-- preprocessing.py          # Text cleaning, tokenization, lemmatization
+|   |-- feature_extraction.py     # TF-IDF vectorization
+|   |-- topic_model.py            # LDA topic modeling
+|   |-- evaluation.py             # Coherence score evaluation
+|   |-- keyword_extractor.py      # Keyword extraction logic
+|   |-- summarizer.py             # Extractive summarization
+|   |-- document_loader.py        # PDF and TXT file loading
+|   `-- visualizations.py         # Word cloud, bar charts
+|
+|-- app.py                        # Main Streamlit application
+|-- requirements.txt              # Python dependencies
+|-- setup.sh                      # One-command environment setup
+`-- README.md                     # Project documentation
+\end{lstlisting}
+
+% ══════════════════════════════════════════════════════════════════════
+\section{Conclusion}
+
+ResearchScope Milestone 1 successfully demonstrates a functional, modular, and well-structured traditional NLP research analysis system. All core requirements of the mid-semester evaluation have been implemented: text preprocessing (tokenization, stopword removal, lemmatization), TF-IDF feature extraction, LDA topic modeling with coherence evaluation, extractive summarization, a multi-format document loader, and an interactive Streamlit UI with visualizations.
+
+The limitations identified in this report — particularly the lack of semantic understanding and the inability to reason across document collections — form the precise motivation for extending the system into a full Agentic AI Research Assistant in Milestone 2, where LLM integration, Retrieval-Augmented Generation (RAG), and LangGraph-based workflow orchestration will directly address these shortcomings.
+
+% ══════════════════════════════════════════════════════════════════════
+\section*{References}
+\addcontentsline{toc}{section}{References}
+
+\begin{enumerate}
+  \item Blei, D. M., Ng, A. Y., \& Jordan, M. I. (2003). Latent Dirichlet Allocation. \textit{Journal of Machine Learning Research}, 3, 993--1022.
+  \item Röder, M., Both, A., \& Hinneburg, A. (2015). Exploring the space of topic coherence measures. \textit{Proceedings of WSDM '15}, 399--408.
+  \item Sparck Jones, K. (1972). A statistical interpretation of term specificity and its application in retrieval. \textit{Journal of Documentation}, 28(1), 11--21. (TF-IDF foundation)
+  \item Bird, S., Klein, E., \& Loper, E. (2009). \textit{Natural Language Processing with Python}. O'Reilly Media.
+  \item Honnibal, M., \& Montani, I. (2017). spaCy 2: Natural Language Understanding with Bloom Embeddings, Convolutional Neural Networks and Incremental Parsing. \textit{To appear}.
+  \item Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. \textit{JMLR}, 12, 2825--2830.
+\end{enumerate}
+
+\end{document}
